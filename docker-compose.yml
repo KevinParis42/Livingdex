@@ -1,0 +1,46 @@
+version: '3.4'
+
+services:
+  db:
+    image: postgres:10-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=livingdex
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    networks:
+      db_network:
+        aliases:
+           - "pdb"
+
+  livingdex:
+    image: livingdex
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 5000:5000
+    environment:
+      - POSTGRES_DB=livingdex
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    networks:
+      - db_network
+
+  pgweb:
+    container_name: pgweb
+    restart: always
+    image: sosedoff/pgweb
+    ports: 
+      - "8081:8081" 
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/livingdex?sslmode=disable
+    networks:
+      - db_network
+
+networks:
+  db_network:
+    driver: bridge
+
+# postgresql+psycopg2://user:password@db:5432/livingdex
